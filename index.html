@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS AI</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#050b16;color:#64eaff;
+ font-family:Arial,sans-serif;text-align:center;
+ min-height:100vh;padding:22px 16px;
+}
+h1{letter-spacing:5px;text-shadow:0 0 15px #00cfff}
+p{color:#a8cbd8}
+.core{
+ width:180px;height:180px;border-radius:50%;
+ margin:35px auto;border:3px solid #27dfff;
+ display:grid;place-items:center;
+ box-shadow:0 0 25px #007fa8,inset 0 0 25px #007fa8;
+ animation:pulse 2s infinite;
+}
+.core span{font-size:55px}
+@keyframes pulse{50%{box-shadow:0 0 45px #00dfff,inset 0 0 35px #007fa8}}
+button,input{
+ border:1px solid #27dfff;border-radius:12px;
+ padding:13px;margin:5px;background:#0a2031;
+ color:#baf7ff;font-size:16px;
+}
+button{cursor:pointer}
+#talk{width:85%;background:#06384c;font-weight:bold}
+#status,#reply{margin:18px auto;max-width:500px;line-height:1.6}
+.panel{max-width:500px;margin:20px auto;border:1px solid #174a64;
+ border-radius:16px;padding:14px}
+input{width:68%}
+.small{font-size:13px;color:#8aa8b8}
+</style>
+</head>
+<body>
+<h1>J.A.R.V.I.S</h1>
+<p>PERSONAL AI • VOICE CONTROL</p>
+
+<div class="core"><span>◉</span></div>
+
+<div id="status">सिस्टम तैयार है।</div>
+<button id="talk" onclick="listen()">🎙️ JARVIS से बात करें</button>
+<div id="reply">नमस्ते! मैं आपका JARVIS असिस्टेंट हूँ।</div>
+
+<div class="panel">
+<h3>ऐप कंट्रोल</h3>
+<button onclick="openApp('youtube')">YouTube खोलें</button>
+<button onclick="openApp('whatsapp')">WhatsApp खोलें</button>
+<button onclick="openApp('chrome')">ब्राउज़र खोलें</button>
+<button onclick="openApp('settings')">फोन सेटिंग्स</button>
+</div>
+
+<div class="panel">
+<h3>कमांड लिखें</h3>
+<input id="cmd" placeholder="जैसे: समय बताओ">
+<button onclick="runCommand(document.getElementById('cmd').value)">चलाएँ</button>
+<p class="small">आवाज़ काम न करे तो यहाँ कमांड लिखें।</p>
+</div>
+
+<script>
+const statusBox=document.getElementById("status");
+const replyBox=document.getElementById("reply");
+
+function say(text){
+ replyBox.textContent=text;
+ if("speechSynthesis" in window){
+  speechSynthesis.cancel();
+  const msg=new SpeechSynthesisUtterance(text);
+  msg.lang="hi-IN";
+  msg.rate=0.95;
+  speechSynthesis.speak(msg);
+ }
+}
+
+function openApp(app){
+ const links={
+  youtube:"https://www.youtube.com/",
+  whatsapp:"https://wa.me/",
+  chrome:"https://www.google.com/",
+  settings:"intent://settings/#Intent;scheme=android-app;end"
+ };
+ if(app==="settings"){
+  say("फोन सेटिंग्स खोलने की कोशिश कर रहा हूँ।");
+  location.href=links.settings;
+ }else if(links[app]){
+  say(app==="youtube"?"YouTube खोल रहा हूँ।":
+       app==="whatsapp"?"WhatsApp खोल रहा हूँ।":
+       "ब्राउज़र खोल रहा हूँ।");
+  window.open(links[app],"_blank");
+ }
+}
+
+function runCommand(raw){
+ const c=raw.toLowerCase().trim();
+ if(!c)return;
+ statusBox.textContent="कमांड: "+raw;
+
+ if(c.includes("यूट्यूब")||c.includes("youtube")){
+  openApp("youtube");
+ }else if(c.includes("व्हाट्सएप")||c.includes("whatsapp")){
+  openApp("whatsapp");
+ }else if(c.includes("क्रोम")||c.includes("ब्राउज़र")){
+  openApp("chrome");
+ }else if(c.includes("सेटिंग")){
+  openApp("settings");
+ }else if(c.includes("समय")||c.includes("टाइम")){
+  say("अभी समय है "+new Date().toLocaleTimeString("hi-IN"));
+ }else if(c.includes("तारीख")){
+  say("आज की तारीख "+new Date().toLocaleDateString("hi-IN"));
+ }else if(c.includes("नमस्ते")||c.includes("हेलो")){
+  say("नमस्ते! मैं आपकी मदद के लिए तैयार हूँ।");
+ }else if(c.includes("तुम कौन")||c.includes("तुम्हारा नाम")){
+  say("मैं JARVIS हूँ, आपका पर्सनल असिस्टेंट।");
+ }else if(c.includes("बंद")||c.includes("रुको")){
+  speechSynthesis.cancel();
+  say("ठीक है, मैंने बोलना रोक दिया।");
+ }else{
+  say("यह कमांड अभी मेरे ऑफलाइन कमांड सिस्टम में नहीं है।");
+ }
+}
+
+function listen(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){
+  statusBox.textContent="इस ब्राउज़र में वॉइस रिकग्निशन उपलब्ध नहीं है।";
+  say("कृपया कमांड लिखकर दें या समर्थित ब्राउज़र में प्रयास करें।");
+  return;
+ }
+ const rec=new SR();
+ rec.lang="hi-IN";
+ rec.continuous=false;
+ rec.interimResults=false;
+ statusBox.textContent="सुन रहा हूँ... अब बोलिए।";
+ rec.onresult=e=>{
+  const text=e.results[0][0].transcript;
+  statusBox.textContent="आपने कहा: "+text;
+  runCommand(text);
+ };
+ rec.onerror=()=>{
+  statusBox.textContent="आवाज़ नहीं पहचान पाया। दोबारा प्रयास करें।";
+ };
+ rec.onend=()=>{
+  if(statusBox.textContent==="सुन रहा हूँ... अब बोलिए।")
+   statusBox.textContent="सुनना समाप्त हुआ।";
+ };
+ rec.start();
+}
+
+if(!("speechSynthesis" in window)){
+ replyBox.textContent="इस ब्राउज़र में आवाज़ से जवाब उपलब्ध नहीं है।";
+}
+</script>
+</body>
+</html>
